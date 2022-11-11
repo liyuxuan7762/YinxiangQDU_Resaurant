@@ -1,4 +1,4 @@
-package com.itheima.reggie.Controller;
+package com.itheima.reggie.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -6,15 +6,12 @@ import com.itheima.reggie.Service.EmployeeService;
 import com.itheima.reggie.common.R;
 import com.itheima.reggie.entity.Employee;
 import lombok.extern.slf4j.Slf4j;
-import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.DigestUtils;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.time.LocalDateTime;
 
 
 @Slf4j

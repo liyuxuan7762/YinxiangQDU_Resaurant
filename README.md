@@ -6,7 +6,7 @@
 #### 1.【解决Controller中异常处理重复写的问题】学习使用了SpringBoot的全局异常处理器
 #### 2.【解决Long类型传递到前端的精度丢失问题】学习了SpringMVC中的消息转换器来解决后端主键ID为Long型，传递到前端精度丢失问题。
 #### 并自己深入探究了SpringMVC中在Controller中return一个对象通过@responsebody就可以自动转化为Json对象的原理
-
+---
 
 ### Day2
 #### 1.【解决每次更新或创建员工，菜品，套餐等都需要设置更新时间创建时间问题】  学习MyBatis Plus中自动填充公共字段功能 学习使用MetaObjectHandler 学习了@TableField注解
@@ -18,5 +18,5 @@
 * #### 里面的内容是线程独立的，只能被其所属线程访问
 #### 4. 【BUG解决】MyBatis Plus 中进行分页查询时查到的Page对象中的totalCount属性为0。忘记写MP配置类中的分页拦截器 https://blog.csdn.net/qq_38974638/article/details/119720371
 
-
+---
 

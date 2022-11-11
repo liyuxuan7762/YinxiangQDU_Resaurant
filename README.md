@@ -7,8 +7,9 @@
 #### 2.【解决Long类型传递到前端的精度丢失问题】学习了SpringMVC中的消息转换器来解决后端主键ID为Long型，传递到前端精度丢失问题。
 #### 并自己深入探究了SpringMVC中在Controller中return一个对象通过@responsebody就可以自动转化为Json对象的原理
 
+
 ### Day2
-#### 1.【解决每次更新或创建员工，菜品，套餐等都需要设置更新时间创建时间问题】  学习MyBatis Plus中自动填充公共字段功能 学习使用MetaObjectHandler
+#### 1.【解决每次更新或创建员工，菜品，套餐等都需要设置更新时间创建时间问题】  学习MyBatis Plus中自动填充公共字段功能 学习使用MetaObjectHandler 学习了@TableField注解
 #### 2.【解决在MetaObjectHandler中无法获取session导致无法获取当前用户的问题】 
 * #### 学习使用ThreadLocal。原理：客户端每一次发送的HTTP请求，在服务器端都会分配一个新的线程来处理，在处理过程中涉及到的filter controller metaObjectHandler都属于同一个线程
 * #### 因此在Filter中将用户信息存放在ThreadLocal中，在metaObjectHandler都属于同一个线程读取即可

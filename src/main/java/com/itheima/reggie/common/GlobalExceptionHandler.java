@@ -34,4 +34,9 @@ public class GlobalExceptionHandler {
         // 判断errorMsg中是否包含duplicate keys信息 如果是那么就可以确定是违反唯一性约束异常
         return R.error(exception.getMessage());
     }
+
+    @ExceptionHandler(Exception.class) // 标明这个方法用来处理这个异常
+    public R<String> exceptionHandler(Exception exception) {
+        return R.error("未知错误");
+    }
 }

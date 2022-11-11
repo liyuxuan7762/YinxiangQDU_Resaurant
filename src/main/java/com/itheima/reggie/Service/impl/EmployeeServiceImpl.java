@@ -6,6 +6,6 @@ import com.itheima.reggie.Service.EmployeeService;
 import com.itheima.reggie.entity.Employee;
 import org.springframework.stereotype.Service;
 
-@Service
+@Service("employeeService")
 public class EmployeeServiceImpl extends ServiceImpl<EmployeeMapper, Employee> implements EmployeeService {
 }

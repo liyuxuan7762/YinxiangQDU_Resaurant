@@ -23,8 +23,15 @@ public class GlobalExceptionHandler {
         // 判断errorMsg中是否包含duplicate keys信息 如果是那么就可以确定是违反唯一性约束异常
         if(message.contains("Duplicate entry")) {
             String duplicateKey = message.split(" ")[2];
-            return R.error("账号" + duplicateKey + "已存在");
+            return R.error( duplicateKey + "已存在");
         }
         return R.error("未知错误");
+    }
+
+    @ExceptionHandler(CustomerException.class) // 标明这个方法用来处理这个异常
+    public R<String> exceptionHandler(CustomerException exception) {
+        String message = exception.getMessage();
+        // 判断errorMsg中是否包含duplicate keys信息 如果是那么就可以确定是违反唯一性约束异常
+        return R.error(exception.getMessage());
     }
 }

@@ -70,14 +70,14 @@ public class EmployeeController {
         // 设置初始密码123456
         employee.setPassword(DigestUtils.md5DigestAsHex("123456".getBytes()));
         // 设置创建时间
-        employee.setCreateTime(LocalDateTime.now());
+        // employee.setCreateTime(LocalDateTime.now());
         // 设置创建人
-        Long currentEmpId = (Long) request.getSession().getAttribute("employee");
-        employee.setCreateUser(currentEmpId);
+        // Long currentEmpId = (Long) request.getSession().getAttribute("employee");
+        // employee.setCreateUser(currentEmpId);
         // 设置更新时间
-        employee.setUpdateTime(LocalDateTime.now());
+        // employee.setUpdateTime(LocalDateTime.now());
         // 设置更新人
-        employee.setUpdateUser(currentEmpId);
+        // employee.setUpdateUser(currentEmpId);
         // 使用MP保存到数据库
         employeeService.save(employee);
         // 返回信息
@@ -105,14 +105,25 @@ public class EmployeeController {
 
     @PutMapping
     public R<String> update(HttpServletRequest request, @RequestBody Employee employee) {
-        // 设置更新时间
-        employee.setUpdateTime(LocalDateTime.now());
+        // 设置更新时间 这些公共字段通过MP的metaObjectHandler处理
+        // employee.setUpdateTime(LocalDateTime.now());
         // 设置更新人
-        employee.setUpdateUser((Long) request.getSession().getAttribute("employee"));
+        // employee.setUpdateUser((Long) request.getSession().getAttribute("employee"));
 
         employeeService.updateById(employee);
 
         return R.success("更新成功！");
+    }
+
+    // 根据ID查询员工信息 用于修改员工信息功能
+    @GetMapping("/{id}")
+    public R<Employee> getEmployeeById(@PathVariable (name = "id") Long id) {
+        Employee employee = employeeService.getById(id);
+        if (employee != null) {
+            return R.success(employee);
+        } else {
+            return R.error("没有查询到员工信息");
+        }
     }
 
 }

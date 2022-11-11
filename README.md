@@ -4,8 +4,7 @@
 
 ### Day1
 #### 1.【解决Controller中异常处理重复写的问题】学习使用了SpringBoot的全局异常处理器
-#### 2.【解决Long类型传递到前端的精度丢失问题】学习了SpringMVC中的消息转换器来解决后端主键ID为Long型，传递到前端精度丢失问题。
-#### 并自己深入探究了SpringMVC中在Controller中return一个对象通过@responsebody就可以自动转化为Json对象的原理
+#### 2.【解决Long类型传递到前端的精度丢失问题】学习了SpringMVC中的消息转换器来解决后端主键ID为Long型，传递到前端精度丢失问题。并自己深入探究了SpringMVC中在Controller中return一个对象通过@responsebody就可以自动转化为Json对象的原理
 
 ---
 

@@ -32,7 +32,9 @@ public class LoginCheckFilter implements Filter {
                 "/employee/login",
                 "/employee/logout",
                 "/backend/**",
-                "/front/**"
+                "/front/**",
+                "/user/sendMsg",
+                "/user/login"
         };
         // 3.如果不需要处理则直接放行
         if(check(requestURI, excludeUrl)) {
@@ -44,6 +46,13 @@ public class LoginCheckFilter implements Filter {
         if(request.getSession().getAttribute("employee") != null) {
             // 用户已经登录 放行
             BaseContext.put((Long) request.getSession().getAttribute("employee"));
+            filterChain.doFilter(servletRequest, servletResponse);
+            return;
+        }
+        // 判断移动端用户是否已经登录
+        if(request.getSession().getAttribute("user") != null) {
+            // 用户已经登录 放行
+            BaseContext.put((Long) request.getSession().getAttribute("user"));
             filterChain.doFilter(servletRequest, servletResponse);
             return;
         }

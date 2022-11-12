@@ -8,4 +8,7 @@ public interface DishService extends IService<Dish> {
     void addDish(DishDto dishDto);
     DishDto edit(Long id);
     void updateDish(DishDto dishDto);
+    void deleteDish(String ids);
+    void offSaleDish(String ids);
+    void startSaleDish(String ids);
 }

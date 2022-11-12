@@ -1,20 +1,21 @@
 package com.itheima.reggie.Service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.itheima.reggie.Mapper.DishMapper;
-import com.itheima.reggie.Service.CategoryService;
-import com.itheima.reggie.Service.DishFlavorService;
-import com.itheima.reggie.Service.DishService;
+import com.itheima.reggie.Service.*;
+import com.itheima.reggie.common.CustomerException;
+import com.itheima.reggie.common.R;
 import com.itheima.reggie.dto.DishDto;
-import com.itheima.reggie.entity.Category;
-import com.itheima.reggie.entity.Dish;
-import com.itheima.reggie.entity.DishFlavor;
+import com.itheima.reggie.entity.*;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Arrays;
 import java.util.List;
 
 @Service("dishService")
@@ -22,6 +23,10 @@ public class DishServiceImpl extends ServiceImpl<DishMapper, Dish> implements Di
 
     @Autowired
     private DishFlavorService dishFlavorService;
+    @Autowired
+    private SetmealService setmealService;
+    @Autowired
+    private SetmealDishService setmealDishService;
 
     // 实现对菜品的添加
     @Transactional
@@ -38,7 +43,6 @@ public class DishServiceImpl extends ServiceImpl<DishMapper, Dish> implements Di
         }
 
         dishFlavorService.saveBatch(flavors);
-
     }
 
     @Override
@@ -56,6 +60,7 @@ public class DishServiceImpl extends ServiceImpl<DishMapper, Dish> implements Di
     }
 
     @Override
+    @Transactional
     public void updateDish(DishDto dishDto) {
         // 更新dish表
         this.updateById(dishDto);
@@ -68,5 +73,50 @@ public class DishServiceImpl extends ServiceImpl<DishMapper, Dish> implements Di
             flavor.setDishId(dishDto.getId());
         }
         dishFlavorService.saveBatch(dishDto.getFlavors());
+    }
+
+    @Override
+    public void deleteDish(String ids) {
+        // 查询dish的状态
+        List<String> idList = Arrays.asList(ids.split(","));
+        LambdaQueryWrapper<Dish> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.in(Dish::getId, idList);
+        queryWrapper.eq(Dish::getStatus, 1);
+        int count = super.count(queryWrapper);
+        if(count > 0) {
+            throw new CustomerException("菜品正在售卖中，无法删除");
+        }
+
+        // 删除
+        super.removeByIds(idList);
+    }
+
+    @Override
+    @Transactional
+    public void offSaleDish(String ids) {
+        String[] dishIds = ids.split(",");
+        UpdateWrapper<Dish> dishUpdateWrapper = new UpdateWrapper<>();
+        dishUpdateWrapper.set("status", 0);
+        dishUpdateWrapper.in("id", Arrays.asList(dishIds));
+        super.update(null, dishUpdateWrapper);
+
+        // 停售菜品后需要相应的把包含这个菜品的所有套餐也停售
+        // 1.根据菜品ID到dish_setmeal表中查询到所有包含该菜品的setmeal_id
+        List<SetmealDish> setmealDisheList = setmealDishService.list(new QueryWrapper<SetmealDish>().select("DISTINCT `setmeal_id`").lambda().in(SetmealDish::getDishId, Arrays.asList(dishIds)));
+        // 2.根据setmeal_id到setmeal表中设置status字段为0
+        StringBuilder setmealIds = new StringBuilder();
+        for(SetmealDish setmealDish : setmealDisheList) {
+            setmealIds.append(setmealDish.getSetmealId()).append(",");
+        }
+        setmealService.offSaleSetmeal(setmealIds.toString());
+    }
+
+    @Override
+    public void startSaleDish(String ids) {
+        String[] dishIds = ids.split(",");
+        UpdateWrapper<Dish> dishUpdateWrapper = new UpdateWrapper<>();
+        dishUpdateWrapper.set("status", 1);
+        dishUpdateWrapper.in("id", Arrays.asList(dishIds));
+        super.update(null, dishUpdateWrapper);
     }
 }

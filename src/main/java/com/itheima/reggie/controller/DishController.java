@@ -1,6 +1,7 @@
 package com.itheima.reggie.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.itheima.reggie.Service.CategoryService;
 import com.itheima.reggie.Service.DishService;
@@ -13,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 @RestController
@@ -77,5 +79,39 @@ public class DishController {
         dishService.updateDish(dishDto);
         return R.success("修改完成");
     }
+
+    // 停售或批量停售菜品
+    @PostMapping("/status/0")
+    public R<String> offSaleDish(String ids) {
+        // 将菜品的status属性设置为0即可
+        dishService.offSaleDish(ids);
+        return R.success("停售成功");
+    }
+
+    // 起售或批量起售
+    @PostMapping("/status/1")
+    public R<String> startSaleDish(String ids) {
+        dishService.startSaleDish(ids);
+        return R.success("起售成功");
+    }
+
+    // 删除和批量删除菜品
+    @DeleteMapping
+    public R<String> deleteDish(String ids) {
+        dishService.deleteDish(ids);
+        return R.success("删除成功");
+    }
+
+    // 根据菜品分类查询到对应分类下面的所有菜品
+    @GetMapping("/list")
+    public R<List<Dish>> getDishesByCategoryId(Dish dish) {
+        LambdaQueryWrapper<Dish> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(dish.getCategoryId() != null, Dish::getCategoryId, dish.getCategoryId());
+        queryWrapper.orderByAsc(Dish::getSort).orderByDesc(Dish::getUpdateTime);
+        queryWrapper.eq(Dish::getStatus, 1);
+        List<Dish> dishList = dishService.list(queryWrapper);
+        return R.success(dishList);
+    }
+
 
 }

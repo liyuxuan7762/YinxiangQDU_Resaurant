@@ -1,5 +1,6 @@
 package com.itheima.reggie.common;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -14,6 +15,7 @@ import java.sql.SQLIntegrityConstraintViolationException;
 // 拦截RestController 和Controller里面的所有方法 通过AOP实现给所有方法通过代理方式添加try catch
 @ControllerAdvice(annotations = {RestController.class, Controller.class})
 @ResponseBody // 需要返回Json数据
+@Slf4j
 public class GlobalExceptionHandler {
 
     // 创建拦截违反SQL唯一性约束异常的处理方法
@@ -37,6 +39,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class) // 标明这个方法用来处理这个异常
     public R<String> exceptionHandler(Exception exception) {
+        log.info(exception.getMessage());
         return R.error("未知错误");
     }
 }

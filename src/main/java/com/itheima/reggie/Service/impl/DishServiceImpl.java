@@ -5,16 +5,21 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.itheima.reggie.Mapper.DishMapper;
-import com.itheima.reggie.Service.*;
+import com.itheima.reggie.Service.DishFlavorService;
+import com.itheima.reggie.Service.DishService;
+import com.itheima.reggie.Service.SetmealDishService;
+import com.itheima.reggie.Service.SetmealService;
 import com.itheima.reggie.common.CustomerException;
-import com.itheima.reggie.common.R;
 import com.itheima.reggie.dto.DishDto;
-import com.itheima.reggie.entity.*;
+import com.itheima.reggie.entity.Dish;
+import com.itheima.reggie.entity.DishFlavor;
+import com.itheima.reggie.entity.SetmealDish;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -38,7 +43,7 @@ public class DishServiceImpl extends ServiceImpl<DishMapper, Dish> implements Di
         // 因此要先遍历list，将每一个flavor对象的dishId设置一下
 
         List<DishFlavor> flavors = dishDto.getFlavors();
-        for(DishFlavor df : flavors) {
+        for (DishFlavor df : flavors) {
             df.setDishId(dishDto.getId());
         }
 
@@ -69,7 +74,7 @@ public class DishServiceImpl extends ServiceImpl<DishMapper, Dish> implements Di
         queryWrapper.eq(DishFlavor::getDishId, dishDto.getId());
         dishFlavorService.remove(queryWrapper);
         // 重新添加flavor
-        for(DishFlavor flavor : dishDto.getFlavors()) {
+        for (DishFlavor flavor : dishDto.getFlavors()) {
             flavor.setDishId(dishDto.getId());
         }
         dishFlavorService.saveBatch(dishDto.getFlavors());
@@ -83,7 +88,7 @@ public class DishServiceImpl extends ServiceImpl<DishMapper, Dish> implements Di
         queryWrapper.in(Dish::getId, idList);
         queryWrapper.eq(Dish::getStatus, 1);
         int count = super.count(queryWrapper);
-        if(count > 0) {
+        if (count > 0) {
             throw new CustomerException("菜品正在售卖中，无法删除");
         }
 
@@ -105,7 +110,7 @@ public class DishServiceImpl extends ServiceImpl<DishMapper, Dish> implements Di
         List<SetmealDish> setmealDisheList = setmealDishService.list(new QueryWrapper<SetmealDish>().select("DISTINCT `setmeal_id`").lambda().in(SetmealDish::getDishId, Arrays.asList(dishIds)));
         // 2.根据setmeal_id到setmeal表中设置status字段为0
         StringBuilder setmealIds = new StringBuilder();
-        for(SetmealDish setmealDish : setmealDisheList) {
+        for (SetmealDish setmealDish : setmealDisheList) {
             setmealIds.append(setmealDish.getSetmealId()).append(",");
         }
         setmealService.offSaleSetmeal(setmealIds.toString());
@@ -118,5 +123,27 @@ public class DishServiceImpl extends ServiceImpl<DishMapper, Dish> implements Di
         dishUpdateWrapper.set("status", 1);
         dishUpdateWrapper.in("id", Arrays.asList(dishIds));
         super.update(null, dishUpdateWrapper);
+    }
+
+    @Override
+    public List<DishDto> getDishesByCategoryId(Dish dish) {
+        // 1.首先根据categoryId查出菜品的基本信息
+        LambdaQueryWrapper<Dish> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(dish.getCategoryId() != null, Dish::getCategoryId, dish.getCategoryId());
+        queryWrapper.orderByAsc(Dish::getSort).orderByDesc(Dish::getUpdateTime);
+        queryWrapper.eq(Dish::getStatus, 1);
+        List<Dish> dishList = super.list(queryWrapper);
+
+        // 2.遍历产品基本信息list，然后根据菜品id，去dish_flavor表中查询菜品对应的口味信息
+        List<DishDto> dishDtoList = new ArrayList<>();
+        DishDto dishDto = null;
+        for (Dish d : dishList) {
+            dishDto = new DishDto();
+            BeanUtils.copyProperties(d, dishDto);
+            List<DishFlavor> flavorList = dishFlavorService.list(new LambdaQueryWrapper<DishFlavor>().eq(DishFlavor::getDishId, d.getId()));
+            dishDto.setFlavors(flavorList);
+            dishDtoList.add(dishDto);
+        }
+        return dishDtoList;
     }
 }

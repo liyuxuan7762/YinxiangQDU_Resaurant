@@ -1,7 +1,6 @@
 package com.itheima.reggie.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.itheima.reggie.Service.CategoryService;
 import com.itheima.reggie.Service.DishService;
@@ -14,7 +13,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 @RestController
@@ -103,13 +101,13 @@ public class DishController {
     }
 
     // 根据菜品分类查询到对应分类下面的所有菜品
+    // 在添加套餐中，根据不同的菜系 选择菜品添加时调用该方法
+    // 当时菜品的类型已经查出来了，菜品类型id直接从前端传过来，然后后台根据id查出菜品即可
+    // 现在移动端除了需要菜品的基本信息外，还需要菜品的口味信息，因此需要扩展这个方法
+    // 返回dishDto 来保存菜品信息
     @GetMapping("/list")
-    public R<List<Dish>> getDishesByCategoryId(Dish dish) {
-        LambdaQueryWrapper<Dish> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(dish.getCategoryId() != null, Dish::getCategoryId, dish.getCategoryId());
-        queryWrapper.orderByAsc(Dish::getSort).orderByDesc(Dish::getUpdateTime);
-        queryWrapper.eq(Dish::getStatus, 1);
-        List<Dish> dishList = dishService.list(queryWrapper);
+    public R<List<DishDto>> getDishesByCategoryId(Dish dish) {
+        List<DishDto> dishList = dishService.getDishesByCategoryId(dish);
         return R.success(dishList);
     }
 

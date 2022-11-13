@@ -1,7 +1,6 @@
 package com.itheima.reggie.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.itheima.reggie.Service.CategoryService;
 import com.itheima.reggie.Service.SetmealService;
@@ -47,7 +46,7 @@ public class SetmealController {
 
         // 遍历setmeal的Page中的records，取出每一条record，得到categoryId，然后根据ID查询categoryName
         SetmealDto setmealDto = null;
-        for(Setmeal setmeal : setmealPageInfo.getRecords()) {
+        for (Setmeal setmeal : setmealPageInfo.getRecords()) {
             setmealDto = new SetmealDto();
             BeanUtils.copyProperties(setmeal, setmealDto);
             String categoryName = categoryService.getById(setmeal.getCategoryId()).getName();
@@ -80,4 +79,12 @@ public class SetmealController {
         setmealService.startSaleSetmeal(ids);
         return R.success("起售成功");
     }
+
+    // 前台根据套餐id查询套餐
+    @GetMapping("/list")
+    public R<List<SetmealDto>> getSetmealById(Setmeal setmeal) {
+        List<SetmealDto> list = setmealService.getSetmealByCategoryId(setmeal);
+        return R.success(list);
+    }
+
 }

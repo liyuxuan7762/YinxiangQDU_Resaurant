@@ -5,17 +5,21 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.itheima.reggie.Mapper.SetmealMapper;
+import com.itheima.reggie.Service.CategoryService;
 import com.itheima.reggie.Service.DishService;
 import com.itheima.reggie.Service.SetmealDishService;
 import com.itheima.reggie.Service.SetmealService;
 import com.itheima.reggie.common.CustomerException;
 import com.itheima.reggie.dto.SetmealDto;
+import com.itheima.reggie.entity.Dish;
 import com.itheima.reggie.entity.Setmeal;
 import com.itheima.reggie.entity.SetmealDish;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -25,6 +29,8 @@ public class SetmealServiceImpl extends ServiceImpl<SetmealMapper, Setmeal> impl
     private SetmealDishService setmealDishService;
     @Autowired
     private DishService dishService;
+    @Autowired
+    private CategoryService categoryService;
 
     @Override
     @Transactional
@@ -89,10 +95,53 @@ public class SetmealServiceImpl extends ServiceImpl<SetmealMapper, Setmeal> impl
         // 1.在setmeal_dish表中根据setmeal_id查找到所有的dish_id
         List<SetmealDish> setmealDisheList = setmealDishService.list(new QueryWrapper<SetmealDish>().select("DISTINCT `dish_id`").lambda().in(SetmealDish::getSetmealId, idsList));
         StringBuilder dish_ids = new StringBuilder();
-        for(SetmealDish setmealDish : setmealDisheList) {
+        for (SetmealDish setmealDish : setmealDisheList) {
             dish_ids.append(setmealDish.getDishId()).append(",");
         }
         // 2.根据dish_id 起售所有产品
         dishService.startSaleDish(dish_ids.toString());
+    }
+
+    @Override
+    public List<SetmealDto> getSetmealByCategoryId(Setmeal setmeal) {
+        // 1.根据分类id查询出套餐基本信息
+        LambdaQueryWrapper<Setmeal> setmealLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        setmealLambdaQueryWrapper.eq(Setmeal::getCategoryId, setmeal.getCategoryId());
+        setmealLambdaQueryWrapper.eq(Setmeal::getStatus, setmeal.getStatus());
+        setmealLambdaQueryWrapper.orderByDesc(Setmeal::getUpdateTime);
+        List<Setmeal> setmealList = super.list(setmealLambdaQueryWrapper);
+
+        // 2.然后根据套餐id去dish_setmeal表中查询出该套餐包含的所有菜品
+        List<SetmealDto> setmealDtoList = new ArrayList<>();
+        SetmealDto setmealDto = null;
+        for (Setmeal s : setmealList) {
+            setmealDto = new SetmealDto();
+            BeanUtils.copyProperties(s, setmealDto);
+            // 获取套餐的类别名称
+            String categoryName = categoryService.getById(s.getCategoryId()).getName();
+            // 获取该套餐所有的菜品
+            List<SetmealDish> setmealDishList = setmealDishService.list(new LambdaQueryWrapper<SetmealDish>().eq(SetmealDish::getSetmealId, s.getId()));
+            // 设置dto属性
+            setmealDto.setCategoryName(categoryName);
+            setmealDto.setSetmealDishes(setmealDishList);
+            setmealDtoList.add(setmealDto);
+        }
+
+        return setmealDtoList;
+    }
+
+    @Override
+    public SetmealDto getSetmealDetailById(Long id) {
+        Setmeal setmeal = super.getOne(new LambdaQueryWrapper<Setmeal>().eq(Setmeal::getId, id));
+        SetmealDto setmealDto = new SetmealDto();
+        BeanUtils.copyProperties(setmeal, setmealDto);
+        // 获取套餐的类别名称
+        String categoryName = categoryService.getById(setmeal.getCategoryId()).getName();
+        // 获取该套餐所有的菜品
+        List<SetmealDish> setmealDishList = setmealDishService.list(new LambdaQueryWrapper<SetmealDish>().eq(SetmealDish::getSetmealId, setmeal.getId()));
+        // 设置dto属性
+        setmealDto.setCategoryName(categoryName);
+        setmealDto.setSetmealDishes(setmealDishList);
+        return setmealDto;
     }
 }

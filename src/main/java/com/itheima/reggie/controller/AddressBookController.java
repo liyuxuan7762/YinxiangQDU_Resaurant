@@ -51,4 +51,15 @@ public class AddressBookController {
         addressBookService.updateAddressBook(addressBook);
         return R.success("修改成功");
     }
+
+    // 查询用户默认地址 用于在用户下单的时候去判断用户是否有默认地址，如果没有则跳转到添加地址的页面
+    @GetMapping("/default")
+    public R<AddressBook> getDefaultAddress() {
+        AddressBook defaultAddressBook = addressBookService.getDefaultAddressBook();
+        if(defaultAddressBook == null) {
+            return R.error("没有找到默认地址");
+        } else {
+            return R.success(defaultAddressBook);
+        }
+    }
 }

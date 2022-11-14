@@ -20,4 +20,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     public void createUser(User user) {
         super.save(user);
     }
+
+    @Override
+    public User getUserById(Long userId) {
+        return super.getById(userId);
+    }
 }

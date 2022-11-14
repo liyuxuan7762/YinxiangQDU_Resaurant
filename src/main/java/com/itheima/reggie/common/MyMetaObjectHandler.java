@@ -26,6 +26,13 @@ public class MyMetaObjectHandler implements MetaObjectHandler {
             metaObject.setValue("updateUser", BaseContext.get());
         }
 
+        if (metaObject.hasSetter("orderTime")) {
+            metaObject.setValue("orderTime", LocalDateTime.now());
+        }
+
+        if (metaObject.hasSetter("checkoutTime")) {
+            metaObject.setValue("checkoutTime", LocalDateTime.now());
+        }
     }
 
     @Override

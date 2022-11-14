@@ -14,4 +14,6 @@ public interface AddressBookService extends IService<AddressBook> {
     AddressBook getAddressBookById(Long id);
 
     void updateAddressBook(AddressBook addressBook);
+
+    AddressBook getDefaultAddressBook();
 }

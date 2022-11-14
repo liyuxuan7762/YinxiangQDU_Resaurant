@@ -57,4 +57,13 @@ public class AddressBookServiceImpl extends ServiceImpl<AddressBookMapper, Addre
     public void updateAddressBook(AddressBook addressBook) {
         super.updateById(addressBook);
     }
+
+    @Override
+    public AddressBook getDefaultAddressBook() {
+        Long userId = BaseContext.get();
+        LambdaQueryWrapper<AddressBook> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(AddressBook::getUserId, userId);
+        queryWrapper.eq(AddressBook::getIsDefault, 1);
+        return super.getOne(queryWrapper);
+    }
 }

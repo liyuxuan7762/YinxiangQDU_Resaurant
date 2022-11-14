@@ -83,7 +83,7 @@
             <groupId>com.sun.mail</groupId>
             <artifactId>javax.mail</artifactId>
             <version>1.5.3</version>
-        </dependency>c
+        </dependency>
     </dependencies>
 
     <build>

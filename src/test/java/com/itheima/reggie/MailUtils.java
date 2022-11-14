@@ -6,8 +6,8 @@ import javax.mail.internet.MimeMessage;
 import java.util.Properties;
 
 public class MailUtils {
-    private static final String USER = "776239423@qq.com"; // 发件人称号，同邮箱地址※
-    private static final String PASSWORD = "ysdimzjzxfqmbdeg"; // 授权码，开启SMTP时显示※
+    private static final String USER = "lyx776239423@gmail.com"; // 发件人称号，同邮箱地址※
+    private static final String PASSWORD = "4485206LYx"; // 授权码，开启SMTP时显示※
 
     /**
      * @param to    收件人邮箱
@@ -22,7 +22,7 @@ public class MailUtils {
 //            注意发送邮件的方法中，发送给谁的，发送给对应的app，※
 //            要改成对应的app。扣扣的改成qq的，网易的要改成网易的。※
 //            props.put("mail.smtp.host", "smtp.qq.com");
-            props.put("mail.smtp.host", "smtp.qq.com");
+            props.put("mail.smtp.host", "smtp.gmail.com");
 
             // 发件人的账号
             props.put("mail.user", USER);

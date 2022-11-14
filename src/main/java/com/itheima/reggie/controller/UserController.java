@@ -5,6 +5,7 @@ import com.itheima.reggie.common.CodeGenerator;
 import com.itheima.reggie.common.MailUtils;
 import com.itheima.reggie.common.R;
 import com.itheima.reggie.entity.User;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -16,6 +17,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/user")
+@Slf4j
 public class UserController {
     @Autowired
     private UserService userService;
@@ -25,6 +27,7 @@ public class UserController {
     public R<String> sendMsg(@RequestBody User user, HttpSession session) {
         // 生成验证码
         String code = CodeGenerator.generateCode4();
+        log.info(code);
         // 发送验证码
         MailUtils.sendCode(user.getPhone(), code);
         // 将验证码保存到session中

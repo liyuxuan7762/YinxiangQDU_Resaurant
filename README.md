@@ -1,14 +1,14 @@
-# 瑞吉外卖项目 Reggie_Take_Out
+# 🍖🍕🍦瑞吉外卖项目 Reggie_Take_Out🍔🍞🍮
 
-### 技术栈 Vue + ElementUI + SpringBoot + Mybatis Plus + Redis
+### 🤖技术栈 Vue + ElementUI + SpringBoot + Mybatis Plus + Redis
 
-### 项目视频 https://www.bilibili.com/video/BV13a411q753/
+### 🖥 项目视频 https://www.bilibili.com/video/BV13a411q753/
 
 ### Day1
 
-#### 1.【解决Controller中异常处理重复写的问题】学习使用了SpringBoot的全局异常处理器
+#### 1.【⭐解决Controller中异常处理重复写的问题】学习使用了SpringBoot的全局异常处理器
 
-#### 2.【解决Long类型传递到前端的精度丢失问题】学习了SpringMVC中的消息转换器来解决后端主键ID为Long型，传递到前端精度丢失问题。
+#### 2.【⭐解决Long类型传递到前端的精度丢失问题】学习了SpringMVC中的消息转换器来解决后端主键ID为Long型，传递到前端精度丢失问题。
 
 #### 并自己深入探究了SpringMVC中在Controller中return一个对象通过@responsebody就可以自动转化为Json对象的原理
 
@@ -16,9 +16,9 @@
 
 ### Day2
 
-#### 1.【解决每次更新或创建员工，菜品，套餐等都需要设置更新时间创建时间问题】 学习MyBatis Plus中自动填充公共字段功能 学习使用MetaObjectHandler 学习了@TableField注解
+#### 1.【⭐解决每次更新或创建员工，菜品，套餐等都需要设置更新时间创建时间问题】 学习MyBatis Plus中自动填充公共字段功能 学习使用MetaObjectHandler 学习了@TableField注解
 
-#### 2.【解决在MetaObjectHandler中无法获取session导致无法获取当前用户的问题】
+#### 2.【⭐解决在MetaObjectHandler中无法获取session导致无法获取当前用户的问题】
 
 * #### 学习使用ThreadLocal。原理：客户端每一次发送的HTTP请求，在服务器端都会分配一个新的线程来处理，在处理过程中涉及到的filter controller metaObjectHandler都属于同一个线程
 * #### 因此在Filter中将用户信息存放在ThreadLocal中，在metaObjectHandler都属于同一个线程读取即可
@@ -26,7 +26,7 @@
 * #### ThreadLocal里面的内容是线程独立的，只能被其所属线程访问
 * #### 里面的内容是线程独立的，只能被其所属线程访问
 
-#### 4. 【BUG解决】MyBatis Plus 中进行分页查询时查到的Page对象中的totalCount属性为0。忘记写MP配置类中的分页拦截器 https://blog.csdn.net/qq_38974638/article/details/119720371
+#### 4. 【⭐BUG解决】MyBatis Plus 中进行分页查询时查到的Page对象中的totalCount属性为0。忘记写MP配置类中的分页拦截器 https://blog.csdn.net/qq_38974638/article/details/119720371
 
 #### 5.文件上传功能
 
@@ -63,15 +63,15 @@
 
 #### 1.完成移动端菜品展示功能。
 
-#### 2.【功能扩展想法】关于购物车扩展功能的想法。给购物车属性添加桌号，从而实现多个用户只要是属于同一个桌子，那么他们点的菜品共享。此外还应该在购物车记录中添加是否已经结完账的标志位，这样下次在查询的时候这些数据就不会查询出来
+#### 2.【💡功能扩展想法】关于购物车扩展功能的想法。给购物车属性添加桌号，从而实现多个用户只要是属于同一个桌子，那么他们点的菜品共享。此外还应该在购物车记录中添加是否已经结完账的标志位，这样下次在查询的时候这些数据就不会查询出来
 
 #### 3.完成购物车相关功能实现。这里有很多需要优化的地方
 
 * #### 添加购物车的时候还需要判断口味，口味不同的相同菜品应该新创建一条记录
 
-#### 4.【自主解决问题】由于之前设置MetaDataHandler来自动填充字段中的UpdateTime,UpdateUser, CreateTime, CreateUser, 但是购物车记录中只有CreateTime,此时如果在购物车实体类的CreateTime字段使用@Table会报错，于是去网上搜索学习到MetaDataObject的HasSetter方法，进而解决这一问题
+#### 4.【💪主解决问题】由于之前设置MetaDataHandler来自动填充字段中的UpdateTime,UpdateUser, CreateTime, CreateUser, 但是购物车记录中只有CreateTime,此时如果在购物车实体类的CreateTime字段使用@Table会报错，于是去网上搜索学习到MetaDataObject的HasSetter方法，进而解决这一问题
 
-#### 5.【功能扩展想法】 清空购物车的做法是直接将数据删除，这一点不好。应该设置一个标志位，用户已经结账的购物记录设置一下，如果用户没付款的清空，那么就直接清空了。后续的数据可以作为营业指标分析，在后台结合Echarts前端插件可视化展示数据。
+#### 5.【💡功能扩展想法】 清空购物车的做法是直接将数据删除，这一点不好。应该设置一个标志位，用户已经结账的购物记录设置一下，如果用户没付款的清空，那么就直接清空了。后续的数据可以作为营业指标分析，在后台结合Echarts前端插件可视化展示数据。
 
 #### Day 5
 

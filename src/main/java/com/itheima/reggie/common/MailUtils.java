@@ -69,7 +69,7 @@ public class MailUtils {
     public static void sendCode(String recevier, String code) {
         String text = "欢迎使用瑞吉外卖，您本次的验证码为" + code + "。(本验证码在1分钟之内有效，请勿将验证码泄露给他人)";
         String title = "瑞吉外卖登录验证码";
-        sendMailByGmail(recevier, text, title);
+        sendMailByQQMail(recevier, text, title);
     }
 
     public static void sendMailByGmail(String to, String text, String title) {

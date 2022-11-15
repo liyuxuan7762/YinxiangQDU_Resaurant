@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.*;
 import javax.servlet.http.HttpSession;
 import java.util.List;
 
-@RestController("/addressBook")
+@RestController()
 @RequestMapping("/addressBook")
 public class AddressBookController {
     @Autowired
@@ -41,7 +41,7 @@ public class AddressBookController {
     }
 
     @GetMapping("/{id}")
-    public R<AddressBook> getAddressBookById(@PathVariable (name = "id") Long id) {
+    public R<AddressBook> getAddressBookById(@PathVariable(name = "id") Long id) {
         AddressBook addressBook = addressBookService.getAddressBookById(id);
         return R.success(addressBook);
     }
@@ -56,7 +56,7 @@ public class AddressBookController {
     @GetMapping("/default")
     public R<AddressBook> getDefaultAddress() {
         AddressBook defaultAddressBook = addressBookService.getDefaultAddressBook();
-        if(defaultAddressBook == null) {
+        if (defaultAddressBook == null) {
             return R.error("没有找到默认地址");
         } else {
             return R.success(defaultAddressBook);

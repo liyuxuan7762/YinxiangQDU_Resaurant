@@ -7,6 +7,7 @@ import com.itheima.reggie.common.R;
 import com.itheima.reggie.entity.User;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.servlet.http.HttpSession;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 @RestController
 @RequestMapping("/user")
@@ -21,17 +23,22 @@ import java.util.Map;
 public class UserController {
     @Autowired
     private UserService userService;
+    // 引入RedisTemplate
+    @Autowired
+    private RedisTemplate redisTemplate;
 
     // 实现用户登录向邮箱发送验证码
     @PostMapping("/sendMsg")
     public R<String> sendMsg(@RequestBody User user, HttpSession session) {
         // 生成验证码
         String code = CodeGenerator.generateCode4();
-        log.info(code);
+        log.info("验证码是" + code);
         // 发送验证码
         MailUtils.sendCode(user.getPhone(), code);
         // 将验证码保存到session中
-        session.setAttribute(user.getPhone(), code);
+        // session.setAttribute(user.getPhone(), code);
+        // 将验证码保存到redis中 设置生命周期为5分钟
+        redisTemplate.opsForValue().set(user.getPhone(), code, 5, TimeUnit.MINUTES);
 
         return R.success("验证码发送成功");
     }
@@ -46,8 +53,12 @@ public class UserController {
 
         String email = map.get("phone").toString();
         String code = map.get("code").toString();
+        // 从session中读取验证码
+        // String codeInSession = session.getAttribute(email).toString();
 
-        String codeInSession = session.getAttribute(email).toString();
+        // 从redis中读取验证码
+        String codeInSession = (String) redisTemplate.opsForValue().get(email);
+
         if (code.equals(codeInSession)) {
             // 如果验证码正确 判断用户是否存在
             User user = userService.getUserByPhone(email);
@@ -61,6 +72,8 @@ public class UserController {
             }
             // 这里原代码有问题，此时user并没有Id
             session.setAttribute("user", user.getId());
+            // 如果登录成功的话 就清空redis中这个用户的验证码
+            redisTemplate.delete(email);
             return R.success(user);
         } else {
             // 验证码不正确

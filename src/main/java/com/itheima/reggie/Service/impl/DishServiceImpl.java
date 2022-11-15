@@ -16,12 +16,15 @@ import com.itheima.reggie.entity.DishFlavor;
 import com.itheima.reggie.entity.SetmealDish;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 @Service("dishService")
 public class DishServiceImpl extends ServiceImpl<DishMapper, Dish> implements DishService {
@@ -32,21 +35,23 @@ public class DishServiceImpl extends ServiceImpl<DishMapper, Dish> implements Di
     private SetmealService setmealService;
     @Autowired
     private SetmealDishService setmealDishService;
+    @Autowired
+    private RedisTemplate redisTemplate;
 
     // 实现对菜品的添加
     @Transactional
+    @CacheEvict(value = "dishCache", key = "#dishDto.categoryId")
     public void addDish(DishDto dishDto) {
         // 先完成对dish表的添加 都是基本信息 所以直接添加即可
         this.save(dishDto); // 这里可以传dto是因为dto继承了dish类
-
         // 然后遍历dto中的dishFlavor列表，因为从前端传递的数据里面列表中只有name，value，没有对应的dishID
         // 因此要先遍历list，将每一个flavor对象的dishId设置一下
-
         List<DishFlavor> flavors = dishDto.getFlavors();
         for (DishFlavor df : flavors) {
             df.setDishId(dishDto.getId());
         }
-
+        // 只清理更新产品所在分类的所有菜品信息
+        redisTemplate.delete(redisTemplate.keys("dish_" + dishDto.getCategoryId() + "_1"));
         dishFlavorService.saveBatch(flavors);
     }
 
@@ -61,6 +66,7 @@ public class DishServiceImpl extends ServiceImpl<DishMapper, Dish> implements Di
         queryWrapper.eq(DishFlavor::getDishId, id);
         List<DishFlavor> dishFlavorList = dishFlavorService.list(queryWrapper);
         dishDto.setFlavors(dishFlavorList);
+        redisTemplate.delete(redisTemplate.keys("*"));
         return dishDto;
     }
 
@@ -78,6 +84,8 @@ public class DishServiceImpl extends ServiceImpl<DishMapper, Dish> implements Di
             flavor.setDishId(dishDto.getId());
         }
         dishFlavorService.saveBatch(dishDto.getFlavors());
+        // 只清理更新产品所在分类的所有菜品信息
+        redisTemplate.delete(redisTemplate.keys("dish_" + dishDto.getCategoryId() + "_1"));
     }
 
     @Override
@@ -94,6 +102,7 @@ public class DishServiceImpl extends ServiceImpl<DishMapper, Dish> implements Di
 
         // 删除
         super.removeByIds(idList);
+        redisTemplate.delete(redisTemplate.keys("*"));
     }
 
     @Override
@@ -114,6 +123,7 @@ public class DishServiceImpl extends ServiceImpl<DishMapper, Dish> implements Di
             setmealIds.append(setmealDish.getSetmealId()).append(",");
         }
         setmealService.offSaleSetmeal(setmealIds.toString());
+        redisTemplate.delete(redisTemplate.keys("*"));
     }
 
     @Override
@@ -123,11 +133,21 @@ public class DishServiceImpl extends ServiceImpl<DishMapper, Dish> implements Di
         dishUpdateWrapper.set("status", 1);
         dishUpdateWrapper.in("id", Arrays.asList(dishIds));
         super.update(null, dishUpdateWrapper);
+        // 清空所有缓存
+        redisTemplate.delete(redisTemplate.keys("*"));
     }
 
     @Override
     public List<DishDto> getDishesByCategoryId(Dish dish) {
-        // 1.首先根据categoryId查出菜品的基本信息
+        // 1.首先从redis中尝试获取数据，如果获取到数据了，那么直接返回，否则再去数据库查询，并将查询结果存储到redis中
+        String key = "dish_" + dish.getCategoryId() + "_" + dish.getStatus();
+        List<DishDto> dishDtoList = null;
+        dishDtoList = (List<DishDto>) redisTemplate.opsForValue().get(key);
+
+        if (dishDtoList != null) {
+            return dishDtoList;
+        }
+        // 2. 如果缓存中没有的话 使用数据库查询 首先根据categoryId查出菜品的基本信息
         LambdaQueryWrapper<Dish> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(dish.getCategoryId() != null, Dish::getCategoryId, dish.getCategoryId());
         queryWrapper.orderByAsc(Dish::getSort).orderByDesc(Dish::getUpdateTime);
@@ -135,7 +155,7 @@ public class DishServiceImpl extends ServiceImpl<DishMapper, Dish> implements Di
         List<Dish> dishList = super.list(queryWrapper);
 
         // 2.遍历产品基本信息list，然后根据菜品id，去dish_flavor表中查询菜品对应的口味信息
-        List<DishDto> dishDtoList = new ArrayList<>();
+        dishDtoList = new ArrayList<>();
         DishDto dishDto = null;
         for (Dish d : dishList) {
             dishDto = new DishDto();
@@ -144,6 +164,8 @@ public class DishServiceImpl extends ServiceImpl<DishMapper, Dish> implements Di
             dishDto.setFlavors(flavorList);
             dishDtoList.add(dishDto);
         }
+        // 将查询后的数据放到redis中
+        redisTemplate.opsForValue().set(key, dishDtoList, 60, TimeUnit.MINUTES);
         return dishDtoList;
     }
 }

@@ -128,4 +128,5 @@
     stop slave;
     create database mytestdb;
     start slave;
-    
+
+#### 3.利用Sharding-JDBC框架结合MySQL主从复制，实现项目的读写分离操作。所有对数据库的更改都在master上进行，其他的都slave上进行.

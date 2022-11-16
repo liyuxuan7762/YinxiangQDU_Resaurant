@@ -1,6 +1,6 @@
 # 🍖🍕🍦瑞吉外卖项目 Reggie_Take_Out🍔🍞🍮
 
-### 🤖技术栈 Vue + ElementUI + SpringBoot + Mybatis Plus + Redis
+### 🤖技术栈 Vue + ElementUI + SpringBoot + Mybatis Plus + Redis + Spring Cache
 
 ### 🖥 项目视频 https://www.bilibili.com/video/BV13a411q753/
 
@@ -94,3 +94,38 @@
 #### 1.解决高并发访问菜品的场景，使用Redis做缓存
 
 #### 2.原生使用Redis在代码中需要在很多方法中添加添加缓存和删除缓存的语句，非常麻烦。学习使用Spring Cache框架的相关注解解决该问题
+
+#### Day 7
+
+#### 1.使用Spring Cache框架优化项目，给查询菜品和套餐缓存机制。这里给前台的查询相关功能添加缓存，给后台对数据库修改的方法添加缓存，对于后台查询的功能不添加缓存，因为后台查询并不频繁。
+
+#### 2.【天坑！】缓解数据库压力，采用一主一从搭建MySQL集群。由于使用虚拟机比较麻烦，这里使用了Docker创建两个MySQL容器进行测试。【天坑！！！】 不知什么原因 一直不成功，最终通过更换MySQL版本解决！！！！花了好几个小时 尝试各种办法
+
+    docker run -p 3307:3306 --name mysql-master \
+    -v /mydata/mysql/master/log:/var/log/mysql \
+    -v /mydata/mysql/master/data:/var/lib/mysql \
+    -v /mydata/mysql/master/conf:/etc/mysql \
+    -e MYSQL_ROOT_PASSWORD=root \
+    -d mysql:5.7.34
+
+    docker run -p 3308:3306 --name mysql-salve \
+    -v /mydata/mysql/salve/log:/var/log/mysql \
+    -v /mydata/mysql/salve/data:/var/lib/mysql \
+    -v /mydata/mysql/salve/conf:/etc/mysql \
+    -e MYSQL_ROOT_PASSWORD=root \
+    -d mysql:5.7.34
+
+#### 第二个坑 mysql配置文件位置 一定要和创建的一致
+
+    可以直接cd /mydata/mysql/master/conf 目录 然后再通过vim创建
+
+#### 第三个坑 在开启主从复制以后，在主库中创建mytestdb，此时会报错，并且从库中不会有mytestdb
+
+    Error 'Can't drop database 'mytestdb'; database doesn't exist' on query. Default database: 'mytestdb'. Query: 'DROP DATABASE `mytestdb`'
+
+#### 解决方式 在从库的mysql中
+
+    stop slave;
+    create database mytestdb;
+    start slave;
+    

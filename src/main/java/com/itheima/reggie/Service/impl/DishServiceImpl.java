@@ -3,28 +3,26 @@ package com.itheima.reggie.Service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.itheima.reggie.Mapper.DishMapper;
-import com.itheima.reggie.Service.DishFlavorService;
-import com.itheima.reggie.Service.DishService;
-import com.itheima.reggie.Service.SetmealDishService;
-import com.itheima.reggie.Service.SetmealService;
+import com.itheima.reggie.Service.*;
 import com.itheima.reggie.common.CustomerException;
 import com.itheima.reggie.dto.DishDto;
+import com.itheima.reggie.entity.Category;
 import com.itheima.reggie.entity.Dish;
 import com.itheima.reggie.entity.DishFlavor;
 import com.itheima.reggie.entity.SetmealDish;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 @Service("dishService")
 public class DishServiceImpl extends ServiceImpl<DishMapper, Dish> implements DishService {
@@ -36,7 +34,7 @@ public class DishServiceImpl extends ServiceImpl<DishMapper, Dish> implements Di
     @Autowired
     private SetmealDishService setmealDishService;
     @Autowired
-    private RedisTemplate redisTemplate;
+    private CategoryService categoryService;
 
     // 实现对菜品的添加
     @Transactional
@@ -50,8 +48,6 @@ public class DishServiceImpl extends ServiceImpl<DishMapper, Dish> implements Di
         for (DishFlavor df : flavors) {
             df.setDishId(dishDto.getId());
         }
-        // 只清理更新产品所在分类的所有菜品信息
-        redisTemplate.delete(redisTemplate.keys("dish_" + dishDto.getCategoryId() + "_1"));
         dishFlavorService.saveBatch(flavors);
     }
 
@@ -66,12 +62,12 @@ public class DishServiceImpl extends ServiceImpl<DishMapper, Dish> implements Di
         queryWrapper.eq(DishFlavor::getDishId, id);
         List<DishFlavor> dishFlavorList = dishFlavorService.list(queryWrapper);
         dishDto.setFlavors(dishFlavorList);
-        redisTemplate.delete(redisTemplate.keys("*"));
         return dishDto;
     }
 
     @Override
     @Transactional
+    @CacheEvict(value = "dishCache", key = "#dishDto.categoryId")
     public void updateDish(DishDto dishDto) {
         // 更新dish表
         this.updateById(dishDto);
@@ -85,10 +81,11 @@ public class DishServiceImpl extends ServiceImpl<DishMapper, Dish> implements Di
         }
         dishFlavorService.saveBatch(dishDto.getFlavors());
         // 只清理更新产品所在分类的所有菜品信息
-        redisTemplate.delete(redisTemplate.keys("dish_" + dishDto.getCategoryId() + "_1"));
+
     }
 
     @Override
+    @CacheEvict(value = "dishCache", allEntries = true)
     public void deleteDish(String ids) {
         // 查询dish的状态
         List<String> idList = Arrays.asList(ids.split(","));
@@ -102,11 +99,12 @@ public class DishServiceImpl extends ServiceImpl<DishMapper, Dish> implements Di
 
         // 删除
         super.removeByIds(idList);
-        redisTemplate.delete(redisTemplate.keys("*"));
+
     }
 
     @Override
     @Transactional
+    @CacheEvict(value = "dishCache", allEntries = true)
     public void offSaleDish(String ids) {
         String[] dishIds = ids.split(",");
         UpdateWrapper<Dish> dishUpdateWrapper = new UpdateWrapper<>();
@@ -123,10 +121,11 @@ public class DishServiceImpl extends ServiceImpl<DishMapper, Dish> implements Di
             setmealIds.append(setmealDish.getSetmealId()).append(",");
         }
         setmealService.offSaleSetmeal(setmealIds.toString());
-        redisTemplate.delete(redisTemplate.keys("*"));
+
     }
 
     @Override
+    @CacheEvict(value = "dishCache", allEntries = true)
     public void startSaleDish(String ids) {
         String[] dishIds = ids.split(",");
         UpdateWrapper<Dish> dishUpdateWrapper = new UpdateWrapper<>();
@@ -134,19 +133,12 @@ public class DishServiceImpl extends ServiceImpl<DishMapper, Dish> implements Di
         dishUpdateWrapper.in("id", Arrays.asList(dishIds));
         super.update(null, dishUpdateWrapper);
         // 清空所有缓存
-        redisTemplate.delete(redisTemplate.keys("*"));
     }
 
     @Override
+    @Cacheable(value = "dishCache", key = "#dish.categoryId", unless = "#result == null")
     public List<DishDto> getDishesByCategoryId(Dish dish) {
         // 1.首先从redis中尝试获取数据，如果获取到数据了，那么直接返回，否则再去数据库查询，并将查询结果存储到redis中
-        String key = "dish_" + dish.getCategoryId() + "_" + dish.getStatus();
-        List<DishDto> dishDtoList = null;
-        dishDtoList = (List<DishDto>) redisTemplate.opsForValue().get(key);
-
-        if (dishDtoList != null) {
-            return dishDtoList;
-        }
         // 2. 如果缓存中没有的话 使用数据库查询 首先根据categoryId查出菜品的基本信息
         LambdaQueryWrapper<Dish> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(dish.getCategoryId() != null, Dish::getCategoryId, dish.getCategoryId());
@@ -155,7 +147,7 @@ public class DishServiceImpl extends ServiceImpl<DishMapper, Dish> implements Di
         List<Dish> dishList = super.list(queryWrapper);
 
         // 2.遍历产品基本信息list，然后根据菜品id，去dish_flavor表中查询菜品对应的口味信息
-        dishDtoList = new ArrayList<>();
+        List<DishDto> dishDtoList = new ArrayList<>();
         DishDto dishDto = null;
         for (Dish d : dishList) {
             dishDto = new DishDto();
@@ -164,8 +156,41 @@ public class DishServiceImpl extends ServiceImpl<DishMapper, Dish> implements Di
             dishDto.setFlavors(flavorList);
             dishDtoList.add(dishDto);
         }
-        // 将查询后的数据放到redis中
-        redisTemplate.opsForValue().set(key, dishDtoList, 60, TimeUnit.MINUTES);
+
         return dishDtoList;
+    }
+
+    @Override
+    public Page page(int page, int pageSize, String name) {
+        Page<Dish> dishPageInfo = new Page<>(page, pageSize);
+        Page<DishDto> dishDtoPageInfo = new Page<>(page, pageSize);
+        List<DishDto> records = new ArrayList<>();
+        // 创建条件
+        LambdaQueryWrapper<Dish> dishLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        dishLambdaQueryWrapper.like(name != null, Dish::getName, name);
+        dishLambdaQueryWrapper.orderByAsc(Dish::getSort);
+        // 执行查询
+        super.page(dishPageInfo);
+
+        // 执行完查询以后可以查询到dish的所有信息 然后使用对象拷贝，将DishPageInfo中的属性都拷贝到dishDtoPageInfo
+        BeanUtils.copyProperties(dishPageInfo, dishDtoPageInfo, "records");
+
+        // 遍历records，根据categoryId查询其对应的类型名称，然后赋值给dto的categoryName属性，最后将所有的dto封装到list
+        // 然后传递给dishDtoPageInfo的record属性即可
+        DishDto dishDto = null;
+        for (Dish dish : dishPageInfo.getRecords()) {
+            // 获取categoryId,然后根据Id查找到对应的category, 然后获取到category的name属性，赋值给dishDto
+            // 由于dishDto是new出来的，里面所有的属性都为空，因此需要先将dish的属性拷贝到dishDto
+            dishDto = new DishDto();
+            BeanUtils.copyProperties(dish, dishDto);
+            Category category = categoryService.getById(dish.getCategoryId());
+            if (category != null) {
+                dishDto.setCategoryName(category.getName());
+                records.add(dishDto);
+            }
+        }
+
+        dishDtoPageInfo.setRecords(records);
+        return dishDtoPageInfo;
     }
 }

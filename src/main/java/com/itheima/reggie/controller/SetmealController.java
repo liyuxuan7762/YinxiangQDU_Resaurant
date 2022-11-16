@@ -1,17 +1,14 @@
 package com.itheima.reggie.controller;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.itheima.reggie.Service.CategoryService;
 import com.itheima.reggie.Service.SetmealService;
 import com.itheima.reggie.common.R;
 import com.itheima.reggie.dto.SetmealDto;
 import com.itheima.reggie.entity.Setmeal;
-import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @RestController
@@ -32,31 +29,8 @@ public class SetmealController {
     // 根据条件分页查询套餐
     @GetMapping("/page")
     public R<Page> getSetmeals(int page, int pageSize, String name) {
-        // 由于Page中查询的字段只有CategoryId，页面上要显示的是分类的名称，因此使用DTO
-        // 1.先查出来setmeal的基本信息
-        Page<Setmeal> setmealPageInfo = new Page<>(page, pageSize);
-        LambdaQueryWrapper<Setmeal> setmealLambdaQueryWrapper = new LambdaQueryWrapper<>();
-        setmealLambdaQueryWrapper.like(name != null, Setmeal::getName, name);
-        setmealService.page(setmealPageInfo, setmealLambdaQueryWrapper);
-
-        // 创建一个dto的page对象，把基本信息都拷贝过去
-        Page<SetmealDto> setmealDtoPageInfo = new Page<>();
-        List<SetmealDto> setmealDtoList = new ArrayList<>();
-        BeanUtils.copyProperties(setmealPageInfo, setmealDtoPageInfo, "records");
-
-        // 遍历setmeal的Page中的records，取出每一条record，得到categoryId，然后根据ID查询categoryName
-        SetmealDto setmealDto = null;
-        for (Setmeal setmeal : setmealPageInfo.getRecords()) {
-            setmealDto = new SetmealDto();
-            BeanUtils.copyProperties(setmeal, setmealDto);
-            String categoryName = categoryService.getById(setmeal.getCategoryId()).getName();
-            setmealDto.setCategoryName(categoryName);
-            setmealDtoList.add(setmealDto);
-        }
-
-        setmealDtoPageInfo.setRecords(setmealDtoList);
-
-        return R.success(setmealDtoPageInfo);
+        Page pageInfo = setmealService.page(page, pageSize, name);
+        return R.success(pageInfo);
     }
 
     // 删除套餐信息

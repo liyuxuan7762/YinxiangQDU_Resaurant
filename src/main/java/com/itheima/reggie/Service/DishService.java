@@ -1,5 +1,6 @@
 package com.itheima.reggie.Service;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.itheima.reggie.dto.DishDto;
 import com.itheima.reggie.entity.Dish;
@@ -14,4 +15,5 @@ public interface DishService extends IService<Dish> {
     void offSaleDish(String ids);
     void startSaleDish(String ids);
     List<DishDto> getDishesByCategoryId(Dish dish);
+    Page page(int page, int pageSize, String name);
 }

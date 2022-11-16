@@ -128,4 +128,4 @@
     stop slave;
     create database mytestdb;
     start slave;
-    
+123

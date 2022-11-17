@@ -62,4 +62,16 @@ public class AddressBookController {
             return R.success(defaultAddressBook);
         }
     }
+
+    @DeleteMapping
+    public R<String> deleteAddressById(Long ids) {
+        addressBookService.deleteAddressById(ids);
+        return R.success("删除成功");
+    }
+
+    @GetMapping("/lastUpdate")
+    public R<AddressBook> lastUpdate() {
+        AddressBook addressBook = addressBookService.lastUpdateAddress();
+        return R.success(addressBook);
+    }
 }

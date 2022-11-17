@@ -10,4 +10,5 @@ public interface ShoppingCartService extends IService<ShoppingCart> {
     List<ShoppingCart> getShoppingCartByUserId(Long userId);
     void sub(ShoppingCart shoppingCart);
     void clean();
+    void addBatch(List<ShoppingCart> shoppingCartList);
 }

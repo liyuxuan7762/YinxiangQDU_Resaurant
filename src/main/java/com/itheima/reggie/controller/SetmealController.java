@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.itheima.reggie.Service.CategoryService;
 import com.itheima.reggie.Service.SetmealService;
 import com.itheima.reggie.common.R;
+import com.itheima.reggie.dto.DishDto;
 import com.itheima.reggie.dto.SetmealDto;
 import com.itheima.reggie.entity.Setmeal;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,8 +17,6 @@ import java.util.List;
 public class SetmealController {
     @Autowired
     private SetmealService setmealService;
-    @Autowired
-    private CategoryService categoryService;
 
     // 添加套餐
     @PostMapping
@@ -61,4 +60,26 @@ public class SetmealController {
         return R.success(list);
     }
 
+    // 修改页面数据回显
+    @GetMapping("/{id}")
+    public R<SetmealDto> edit(@PathVariable Long id) {
+        SetmealDto setmealDto = setmealService.edit(id);
+        return R.success(setmealDto);
+    }
+
+    @PutMapping
+    public R<String> updateSetmeal(@RequestBody SetmealDto setmealDto) {
+        setmealService.updateSetmeal(setmealDto);
+        return R.success("保存成功");
+    }
+
+    /**
+     * 主页用户点击套餐 显示套餐中包含的菜品
+     * @param id
+     */
+    @GetMapping("/dish/{id}")
+    public R<List<DishDto>>setmealDetail(@PathVariable(name = "id") Long id) {
+        List<DishDto> dishDtoList = setmealService.setmealDetail(id);
+        return R.success(dishDtoList);
+    }
 }

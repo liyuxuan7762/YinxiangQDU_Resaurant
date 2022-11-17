@@ -193,4 +193,9 @@ public class DishServiceImpl extends ServiceImpl<DishMapper, Dish> implements Di
         dishDtoPageInfo.setRecords(records);
         return dishDtoPageInfo;
     }
+
+    @Override
+    public Dish getDishById(Long id) {
+       return super.getById(id);
+    }
 }

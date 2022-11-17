@@ -7,4 +7,6 @@ import java.util.List;
 
 public interface OrderDetailService extends IService<OrderDetail> {
     void insertBatch(List<OrderDetail> orderDetailList);
+
+    List<OrderDetail> getOrderDetailListByOrderId(Long orderId);
 }

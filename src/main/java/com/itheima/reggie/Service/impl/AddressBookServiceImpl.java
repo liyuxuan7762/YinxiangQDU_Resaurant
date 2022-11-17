@@ -24,6 +24,7 @@ public class AddressBookServiceImpl extends ServiceImpl<AddressBookMapper, Addre
         LambdaQueryWrapper<AddressBook> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(AddressBook::getUserId, userId);
         queryWrapper.orderByDesc(AddressBook::getUpdateTime);
+        queryWrapper.eq(AddressBook::getIsDeleted, 0);
         return super.list(queryWrapper);
     }
 
@@ -36,20 +37,21 @@ public class AddressBookServiceImpl extends ServiceImpl<AddressBookMapper, Addre
         UpdateWrapper<AddressBook> updateWrapper = new UpdateWrapper<>();
         updateWrapper.set("is_default", 0);
         updateWrapper.eq("user_id", user_id);
+        updateWrapper.eq("is_delete", 0);
         super.update(updateWrapper);
 
         // 2.然后根据地址id将对应的地址默认值改为1
-
         UpdateWrapper<AddressBook> setdefault = new UpdateWrapper<>();
         setdefault.set("is_default", 1);
         setdefault.eq("id", id);
+        setdefault.eq("is_delete", 0);
         super.update(setdefault);
     }
 
     @Override
     public AddressBook getAddressBookById(Long id) {
         LambdaQueryWrapper<AddressBook> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(AddressBook::getId, id);
+        queryWrapper.eq(AddressBook::getId, id).eq(AddressBook::getIsDeleted, 0);
         return super.getOne(queryWrapper);
     }
 
@@ -64,6 +66,25 @@ public class AddressBookServiceImpl extends ServiceImpl<AddressBookMapper, Addre
         LambdaQueryWrapper<AddressBook> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(AddressBook::getUserId, userId);
         queryWrapper.eq(AddressBook::getIsDefault, 1);
+        queryWrapper.eq(AddressBook::getIsDeleted, 0);
+        return super.getOne(queryWrapper);
+    }
+
+    @Override
+    public void deleteAddressById(Long ids) {
+        UpdateWrapper<AddressBook> updateWrapper = new UpdateWrapper<>();
+        updateWrapper.set("is_deleted", 1).eq("id", ids);
+        super.update(updateWrapper);
+    }
+
+    @Override
+    public AddressBook lastUpdateAddress() {
+        Long userId = BaseContext.get();
+        LambdaQueryWrapper<AddressBook> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(AddressBook::getIsDeleted, 0);
+        queryWrapper.eq(AddressBook::getUserId, userId);
+        queryWrapper.orderByDesc(AddressBook::getUpdateTime);
+        queryWrapper.last("limit 0, 1");
         return super.getOne(queryWrapper);
     }
 }

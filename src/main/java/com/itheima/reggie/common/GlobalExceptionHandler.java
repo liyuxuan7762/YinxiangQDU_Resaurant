@@ -23,9 +23,9 @@ public class GlobalExceptionHandler {
     public R<String> exceptionHandler(SQLIntegrityConstraintViolationException exception) {
         String message = exception.getMessage();
         // 判断errorMsg中是否包含duplicate keys信息 如果是那么就可以确定是违反唯一性约束异常
-        if(message.contains("Duplicate entry")) {
+        if (message.contains("Duplicate entry")) {
             String duplicateKey = message.split(" ")[2];
-            return R.error( duplicateKey + "已存在");
+            return R.error(duplicateKey + "已存在");
         }
         return R.error("未知错误");
     }
@@ -40,6 +40,6 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(Exception.class) // 标明这个方法用来处理这个异常
     public R<String> exceptionHandler(Exception exception) {
         log.info(exception.getMessage());
-        return R.error("未知错误");
+        return R.error(exception.getMessage());
     }
 }

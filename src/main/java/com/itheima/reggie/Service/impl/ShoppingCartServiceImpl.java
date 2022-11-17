@@ -68,11 +68,15 @@ public class ShoppingCartServiceImpl extends ServiceImpl<ShoppingCartMapper, Sho
             // 如果大于1，则直接num-- 然后执行update 否则直接删除该条目
             super.remove(queryWrapper);
         }
-
     }
 
     @Override
     public void clean() {
         super.remove(new LambdaQueryWrapper<ShoppingCart>().eq(ShoppingCart::getUserId, BaseContext.get()));
+    }
+
+    @Override
+    public void addBatch(List<ShoppingCart> shoppingCartList) {
+        super.saveBatch(shoppingCartList);
     }
 }

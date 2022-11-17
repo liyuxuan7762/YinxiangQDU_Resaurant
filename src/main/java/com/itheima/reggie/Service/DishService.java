@@ -16,4 +16,5 @@ public interface DishService extends IService<Dish> {
     void startSaleDish(String ids);
     List<DishDto> getDishesByCategoryId(Dish dish);
     Page page(int page, int pageSize, String name);
+    Dish getDishById(Long id);
 }

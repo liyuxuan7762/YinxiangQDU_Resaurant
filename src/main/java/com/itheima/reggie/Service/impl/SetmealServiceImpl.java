@@ -11,7 +11,9 @@ import com.itheima.reggie.Service.DishService;
 import com.itheima.reggie.Service.SetmealDishService;
 import com.itheima.reggie.Service.SetmealService;
 import com.itheima.reggie.common.CustomerException;
+import com.itheima.reggie.dto.DishDto;
 import com.itheima.reggie.dto.SetmealDto;
+import com.itheima.reggie.entity.Dish;
 import com.itheima.reggie.entity.Setmeal;
 import com.itheima.reggie.entity.SetmealDish;
 import org.springframework.beans.BeanUtils;
@@ -41,9 +43,7 @@ public class SetmealServiceImpl extends ServiceImpl<SetmealMapper, Setmeal> impl
         // 需要操作两个表
         // 首先将基本信息保存在Setmeal表中
         // 然后将该套餐对应的菜品信息都保存到setmeal_dish表中
-
         this.save(setmealDto);
-
         // 因为dto中的保存每一个套餐中所有的菜品的list中的每一个dish是没有setmeal_id 的
         // 因此先遍历设置setmeal_id
 
@@ -180,4 +180,67 @@ public class SetmealServiceImpl extends ServiceImpl<SetmealMapper, Setmeal> impl
         setmealDtoPageInfo.setRecords(setmealDtoList);
         return setmealDtoPageInfo;
     }
+
+    @Override
+    public SetmealDto edit(Long id) {
+        // 用于编辑页面的数据回显
+        // 1.根据id查询去setmeal表中查询基本信息
+        LambdaQueryWrapper<Setmeal> setmealLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        setmealLambdaQueryWrapper.eq(Setmeal::getId, id);
+        Setmeal setmeal = super.getOne(setmealLambdaQueryWrapper);
+        SetmealDto setmealDto = new SetmealDto();
+        BeanUtils.copyProperties(setmeal, setmealDto);
+        // 2.根据id到setmeal_dish表中查询该套餐对应的产品信息
+        LambdaQueryWrapper<SetmealDish> setmealDishLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        setmealDishLambdaQueryWrapper.eq(SetmealDish::getSetmealId, id);
+        List<SetmealDish> setmealDishList = setmealDishService.list(setmealDishLambdaQueryWrapper);
+
+        setmealDto.setSetmealDishes(setmealDishList);
+
+        return setmealDto;
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void updateSetmeal(SetmealDto setmealDto) {
+        // 首先向setmeal表中添加基本信息
+        super.updateById(setmealDto);
+        // 然后根据setmealId删除掉setmeal_dish表中所有相关菜品记录
+        LambdaQueryWrapper<SetmealDish> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(SetmealDish::getSetmealId, setmealDto.getId());
+        setmealDishService.remove(queryWrapper);
+
+        // 前端传递过来的dishList里面没有setmeal_id 需要手动添加
+        for(SetmealDish s : setmealDto.getSetmealDishes()) {
+            s.setSetmealId(setmealDto.getId());
+        }
+        // 然后重新将dto中的菜品对象插入到setmeal_dish表中
+        setmealDishService.saveBatch(setmealDto.getSetmealDishes());
+    }
+    @Override
+    public Setmeal getSetmealById(Long id) {
+        return super.getById(id);
+    }
+
+    @Override
+    public List<DishDto> setmealDetail(Long id) {
+        // 这里使用dishDto主要是dto中有一个copies份数属性
+        LambdaQueryWrapper<SetmealDish> setmealDishLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        setmealDishLambdaQueryWrapper.eq(SetmealDish::getSetmealId, id);
+        List<SetmealDish> setmealDishList = setmealDishService.list(setmealDishLambdaQueryWrapper);
+        DishDto dishDto = null;
+        List<DishDto> dishDtoList = new ArrayList<>();
+        for(SetmealDish setmealDish : setmealDishList) {
+            dishDto = new DishDto();
+            // 拷贝基础信息
+            BeanUtils.copyProperties(setmealDish, dishDto);
+            // 根据dishId 查询出Dish对象
+            Dish dish = dishService.getDishById(setmealDish.getDishId());
+            BeanUtils.copyProperties(dish, dishDto);
+            dishDtoList.add(dishDto);
+        }
+        return dishDtoList;
+    }
+
+
 }

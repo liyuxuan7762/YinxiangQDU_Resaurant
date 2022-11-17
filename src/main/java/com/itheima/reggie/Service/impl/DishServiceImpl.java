@@ -35,6 +35,8 @@ public class DishServiceImpl extends ServiceImpl<DishMapper, Dish> implements Di
     private SetmealDishService setmealDishService;
     @Autowired
     private CategoryService categoryService;
+    @Autowired
+    private OrderDetailService orderDetailService;
 
     // 实现对菜品的添加
     @Transactional
@@ -154,6 +156,11 @@ public class DishServiceImpl extends ServiceImpl<DishMapper, Dish> implements Di
             BeanUtils.copyProperties(d, dishDto);
             List<DishFlavor> flavorList = dishFlavorService.list(new LambdaQueryWrapper<DishFlavor>().eq(DishFlavor::getDishId, d.getId()));
             dishDto.setFlavors(flavorList);
+
+            // 查询菜品的销量
+            Long saleNum = orderDetailService.getSaleNumByDishId(d.getId(), 0);
+            dishDto.setSaleNum(saleNum);
+
             dishDtoList.add(dishDto);
         }
 
@@ -196,6 +203,8 @@ public class DishServiceImpl extends ServiceImpl<DishMapper, Dish> implements Di
 
     @Override
     public Dish getDishById(Long id) {
-       return super.getById(id);
+        return super.getById(id);
     }
+
+
 }

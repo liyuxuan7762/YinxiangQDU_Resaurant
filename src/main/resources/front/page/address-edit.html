@@ -52,7 +52,8 @@
         </div>
         <div class="divItem ">
             <span>标签：</span>
-            <span :class="{spanItem:true,spanActiveSchool:activeIndex === index}" :key="index" @click="form.label = item;activeIndex = index"
+            <span :class="{spanItem:true,spanActiveSchool:activeIndex === index}" :key="index"
+                  @click="form.label = item;activeIndex = index"
                   v-for="(item,index) in labelList">{{item}}</span>
         </div>
         <div @click="saveAddress" class="divSave">保存地址</div>

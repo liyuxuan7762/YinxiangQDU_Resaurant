@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.itheima.reggie.dto.DishDto;
 import com.itheima.reggie.entity.Dish;
+import io.swagger.models.auth.In;
 
 import java.util.List;
 
@@ -17,4 +18,5 @@ public interface DishService extends IService<Dish> {
     List<DishDto> getDishesByCategoryId(Dish dish);
     Page page(int page, int pageSize, String name);
     Dish getDishById(Long id);
+
 }

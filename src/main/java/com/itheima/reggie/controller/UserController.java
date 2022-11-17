@@ -29,16 +29,17 @@ public class UserController {
 
     // 实现用户登录向邮箱发送验证码
     @PostMapping("/sendMsg")
-    public R<String> sendMsg(@RequestBody User user, HttpSession session) {
+    public R<String> sendMsg(@RequestBody Map<String, String> map, HttpSession session) {
         // 生成验证码
         String code = CodeGenerator.generateCode4();
+        String email = map.get("email");
         log.info("验证码是" + code);
         // 发送验证码
-        MailUtils.sendCode(user.getPhone(), code);
+        MailUtils.sendCode(email, code);
         // 将验证码保存到session中
         // session.setAttribute(user.getPhone(), code);
         // 将验证码保存到redis中 设置生命周期为5分钟
-        redisTemplate.opsForValue().set(user.getPhone(), code, 5, TimeUnit.MINUTES);
+        redisTemplate.opsForValue().set(email, code, 5, TimeUnit.MINUTES);
 
         return R.success("验证码发送成功");
     }
@@ -51,7 +52,7 @@ public class UserController {
         // 3.判断用户是否注册过，如果没有自动注册
         // 4.返回相应信息
 
-        String email = map.get("phone").toString();
+        String email = map.get("email").toString();
         String code = map.get("code").toString();
         // 从session中读取验证码
         // String codeInSession = session.getAttribute(email).toString();

@@ -6,10 +6,7 @@ import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.itheima.reggie.Mapper.SetmealMapper;
-import com.itheima.reggie.Service.CategoryService;
-import com.itheima.reggie.Service.DishService;
-import com.itheima.reggie.Service.SetmealDishService;
-import com.itheima.reggie.Service.SetmealService;
+import com.itheima.reggie.Service.*;
 import com.itheima.reggie.common.CustomerException;
 import com.itheima.reggie.dto.DishDto;
 import com.itheima.reggie.dto.SetmealDto;
@@ -35,6 +32,8 @@ public class SetmealServiceImpl extends ServiceImpl<SetmealMapper, Setmeal> impl
     private DishService dishService;
     @Autowired
     private CategoryService categoryService;
+    @Autowired
+    private OrderDetailService orderDetailService;
 
     @Override
     @Transactional
@@ -131,6 +130,11 @@ public class SetmealServiceImpl extends ServiceImpl<SetmealMapper, Setmeal> impl
             // 设置dto属性
             setmealDto.setCategoryName(categoryName);
             setmealDto.setSetmealDishes(setmealDishList);
+
+            // 查询销量
+            Long saleNum = orderDetailService.getSaleNumByDishId(s.getId(), 0);
+            setmealDto.setSaleNum(saleNum);
+
             setmealDtoList.add(setmealDto);
         }
 
@@ -211,12 +215,13 @@ public class SetmealServiceImpl extends ServiceImpl<SetmealMapper, Setmeal> impl
         setmealDishService.remove(queryWrapper);
 
         // 前端传递过来的dishList里面没有setmeal_id 需要手动添加
-        for(SetmealDish s : setmealDto.getSetmealDishes()) {
+        for (SetmealDish s : setmealDto.getSetmealDishes()) {
             s.setSetmealId(setmealDto.getId());
         }
         // 然后重新将dto中的菜品对象插入到setmeal_dish表中
         setmealDishService.saveBatch(setmealDto.getSetmealDishes());
     }
+
     @Override
     public Setmeal getSetmealById(Long id) {
         return super.getById(id);
@@ -230,7 +235,7 @@ public class SetmealServiceImpl extends ServiceImpl<SetmealMapper, Setmeal> impl
         List<SetmealDish> setmealDishList = setmealDishService.list(setmealDishLambdaQueryWrapper);
         DishDto dishDto = null;
         List<DishDto> dishDtoList = new ArrayList<>();
-        for(SetmealDish setmealDish : setmealDishList) {
+        for (SetmealDish setmealDish : setmealDishList) {
             dishDto = new DishDto();
             // 拷贝基础信息
             BeanUtils.copyProperties(setmealDish, dishDto);

@@ -9,4 +9,7 @@ public interface OrderDetailService extends IService<OrderDetail> {
     void insertBatch(List<OrderDetail> orderDetailList);
 
     List<OrderDetail> getOrderDetailListByOrderId(Long orderId);
+
+    Long getSaleNumByDishId(Long id, Integer status);
+
 }
